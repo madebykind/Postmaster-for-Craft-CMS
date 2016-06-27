@@ -12,29 +12,29 @@ class CraftService extends BaseService {
 		'Craft\EmailModel'
 	);
 
-    public function getName()
-    {
-        return Craft::t('Craft');
-    }
+	public function getName()
+	{
+		return Craft::t('Craft');
+	}
 
-    public function getId()
-    {
-        return 'craft';
-    }
+	public function getId()
+	{
+		return 'craft';
+	}
 
 	public function send(Postmaster_TransportModel $model)
 	{
 		$emailModel = new EmailModel($model->settings->getAttributes());
 
-        $cc = explode(',', $model->settings->cc);
-        $emailModel->cc = array_map(function($ele){
-            return array('email'=> $ele);
-        }, $cc);
+		$cc = explode(',', $model->settings->cc);
+		$emailModel->cc = array_map(function($ele){
+			return array('email'=> $ele);
+		}, $cc);
 
-        $bcc = explode(',', $model->settings->bcc);
-        $emailModel->bcc = array_map(function($ele){
-            return array('email'=> $ele);
-        }, $bcc);
+		$bcc = explode(',', $model->settings->bcc);
+		$emailModel->bcc = array_map(function($ele){
+			return array('email'=> $ele);
+		}, $bcc);
 
 		$success = $this->craft()->email->sendEmail($emailModel);
 

@@ -9,63 +9,63 @@ use Craft\Plugins\Postmaster\Components\BaseParcelType;
 
 class DefaultParcelType extends BaseParcelType {
 	
-    public function getName()
-    {
-        return Craft::t('Entry Email');
-    }
+	public function getName()
+	{
+		return Craft::t('Entry Email');
+	}
 
-    public function getId()
-    {
-        return 'default';
-    }
+	public function getId()
+	{
+		return 'default';
+	}
 
 	public function init()
 	{
 		foreach($this->settings->events as $event)
-        {
-            $parcelType = $this;
+		{
+			$parcelType = $this;
 
-        	// remove the $parcel dependency by moving all the validation and sendFromEvent methods
-        	// from the ParcelModel to this class
-            $this->craft()->on($event, function(\Craft\Event $event) use ($parcelType)
-            {
-                $isNewEntry = isset($event->params['isNewEntry']) ? $event->params['isNewEntry'] : false;
+			// remove the $parcel dependency by moving all the validation and sendFromEvent methods
+			// from the ParcelModel to this class
+			$this->craft()->on($event, function(\Craft\Event $event) use ($parcelType)
+			{
+				$isNewEntry = isset($event->params['isNewEntry']) ? $event->params['isNewEntry'] : false;
 
-            	if(isset($event->params['entry']))
-		        {
-		            $entry = $event->params['entry'];
-		        }
-		        
-		        if(isset($event->params['draft']))
-		        {
-		            $entry = $event->params['draft'];
-		        }
+				if(isset($event->params['entry']))
+				{
+					$entry = $event->params['entry'];
+				}
 
-                if($parcelType->areSectionsValid($entry))
-                {        
-                    $parcelType->parse(array(
-                        'entry' => $entry,
-                        'isNewEntry' => $isNewEntry
-                    ));
+				if(isset($event->params['draft']))
+				{
+					$entry = $event->params['draft'];
+				}
 
-		        $isNew = isset($event->params['isNewEntry']) || isset($event->params['isNewDraft']);
-		        
-    		        if($parcelType->validateEntry($entry, $isNew))
-    		        {
-                        $obj = new Postmaster_TransportModel(array(
-                            'service' => $parcelType->getParcelModel()->service,
-                            'settings' => $parcelType->settings,
-                            'data' => array(
-                                'entry' => $entry,
-                                'isNewEntry' => $isNewEntry
-                            )
-                        ));
+				if($parcelType->areSectionsValid($entry))
+				{
+					$parcelType->parse(array(
+						'entry' => $entry,
+						'isNewEntry' => $isNewEntry
+					));
 
-    		           	$parcelType->parcel->send($obj);
-    		        }
-                }
-            });
-        }
+				$isNew = isset($event->params['isNewEntry']) || isset($event->params['isNewDraft']);
+
+					if($parcelType->validateEntry($entry, $isNew))
+					{
+						$obj = new Postmaster_TransportModel(array(
+							'service' => $parcelType->getParcelModel()->service,
+							'settings' => $parcelType->settings,
+							'data' => array(
+								'entry' => $entry,
+								'isNewEntry' => $isNewEntry
+							)
+						));
+
+						$parcelType->parcel->send($obj);
+					}
+				}
+			});
+		}
 	}
 
 	public function getInputHtml(Array $data = array())
@@ -83,122 +83,122 @@ class DefaultParcelType extends BaseParcelType {
 		return '\Craft\Postmaster_DefaultParcelTypeSettingsModel';
 	}
 
-    public function validateEntry(EntryModel $entry, $isNewEntry = false)
-    {
-        if(!$this->areTriggersValid($isNewEntry))
-        {
-        	return false;
-        }
+	public function validateEntry(EntryModel $entry, $isNewEntry = false)
+	{
+		if(!$this->areTriggersValid($isNewEntry))
+		{
+			return false;
+		}
 
-        if(!$this->areSectionsValid($entry))
-        {
-        	return false;
-        }
+		if(!$this->areSectionsValid($entry))
+		{
+			return false;
+		}
 
-        if(!$this->areStatusesValid($entry))
-        {
-        	return false;
-        }
+		if(!$this->areStatusesValid($entry))
+		{
+			return false;
+		}
 
-        if(!$this->areExtraConditionalsValid())
-        {
-        	return false;
-        }
+		if(!$this->areExtraConditionalsValid())
+		{
+			return false;
+		}
 
-        return true;
-    }
+		return true;
+	}
 
-    public function hasStatuses()
-    {
-        if( isset($this->settings->statuses) && 
-            count($this->settings->statuses))
-        {
-            return true;
-        }
+	public function hasStatuses()
+	{
+		if( isset($this->settings->statuses) &&
+			count($this->settings->statuses))
+		{
+			return true;
+		}
 
-        return false;
-    }
+		return false;
+	}
 
-    public function hasSections()
-    {
-        if( isset($this->settings->sections) && 
-            count($this->settings->sections))
-        {
-            return true;
-        }
+	public function hasSections()
+	{
+		if( isset($this->settings->sections) &&
+			count($this->settings->sections))
+		{
+			return true;
+		}
 
-        return false;
-    }
+		return false;
+	}
 
-    public function hasTriggers()
-    {
-    	if( isset($this->settings->triggers) &&
-    		count($this->settings->triggers))
-    	{
-    		return true;
-    	}
+	public function hasTriggers()
+	{
+		if( isset($this->settings->triggers) &&
+			count($this->settings->triggers))
+		{
+			return true;
+		}
 
-    	return false;
-    }
+		return false;
+	}
 
-    public function areTriggersValid($isNewEntry)
-    {
-    	if($this->hasTriggers())
-    	{
-    		$trigger = $isNewEntry ? 'new' : 'edit';
+	public function areTriggersValid($isNewEntry)
+	{
+		if($this->hasTriggers())
+		{
+			$trigger = $isNewEntry ? 'new' : 'edit';
 
-    		if(in_array($trigger, $this->settings->triggers))
-    		{
-    			return true;
-    		}
-    	}
+			if(in_array($trigger, $this->settings->triggers))
+			{
+				return true;
+			}
+		}
 
-    	return false;
-    }
+		return false;
+	}
 
-    public function hasExtraConditionals()
-    {
-        return PostmasterHelper::hasExtraConditionals($this->getSetting('extraConditionals'));
-    }
+	public function hasExtraConditionals()
+	{
+		return PostmasterHelper::hasExtraConditionals($this->getSetting('extraConditionals'));
+	}
 
-    public function areExtraConditionalsValid()
-    {
-       return PostmasterHelper::validateExtraConditionals($this->getSetting('extraConditionals'));
-    }
+	public function areExtraConditionalsValid()
+	{
+	   return PostmasterHelper::validateExtraConditionals($this->getSetting('extraConditionals'));
+	}
 
-    public function areStatusesValid(EntryModel $entry)
-    {
-        if($this->hasStatuses())
-        {
-            if(!in_array($entry->status, $this->settings->statuses))
-            {
-                return false;
-            }
-        }
+	public function areStatusesValid(EntryModel $entry)
+	{
+		if($this->hasStatuses())
+		{
+			if(!in_array($entry->status, $this->settings->statuses))
+			{
+				return false;
+			}
+		}
 
-        return true;
-    }
+		return true;
+	}
 
-    public function areSectionsValid(EntryModel $entry)
-    {
-        if($this->hasSections())
-        {
-            if(in_array($entry->section->id, $this->settings->sections))
-            {
-            	return true;
-            }
-        }
+	public function areSectionsValid(EntryModel $entry)
+	{
+		if($this->hasSections())
+		{
+			if(in_array($entry->section->id, $this->settings->sections))
+			{
+				return true;
+			}
+		}
 
-        return false;
-    }
+		return false;
+	}
 
-    public function getEvents()
-    {
-        if(is_array($this->settings->events) && count($this->settings->events))
-        {
-            return $this->settings->events;
-        }
+	public function getEvents()
+	{
+		if(is_array($this->settings->events) && count($this->settings->events))
+		{
+			return $this->settings->events;
+		}
 
-        return array();
-    }
+		return array();
+	}
 }
